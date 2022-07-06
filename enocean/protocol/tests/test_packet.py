@@ -47,11 +47,11 @@ def test_packet_examples():
         # CO_RD_IDBASE
         PACKET.COMMON_COMMAND: {
             'msg': bytearray([
-                0x55,
-                0x00, 0x01, 0x00, 0x05,
-                0x70,
-                0x08,
-                0x38]),
+                0x55,                       # SYNC byte
+                0x00, 0x01, 0x00, 0x05,     # Header: Data length (2 bytes): 1, Optional length: 0, Packet type: 5
+                0x70,                       # CRC8 for Header
+                0x08,                       # Data: CO_RD_IDBASE
+                0x38]),                     # CRC8 for Data
             'data_len': 1,
             'opt_len': 0,
         },

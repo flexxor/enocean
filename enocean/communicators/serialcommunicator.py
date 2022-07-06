@@ -11,6 +11,7 @@ class SerialCommunicator(Communicator):
     ''' Serial port communicator class for EnOcean radio '''
     logger = logging.getLogger('enocean.communicators.SerialCommunicator')
 
+    # def __init__(self, port='/dev/ttyUSB0', callback=None):
     def __init__(self, port='/dev/ttyAMA0', callback=None):
         super(SerialCommunicator, self).__init__(callback)
         # Initialize serial port
@@ -36,7 +37,7 @@ class SerialCommunicator(Communicator):
             except serial.SerialException:
                 self.logger.error('Serial port exception! (device disconnected or multiple access on port?)')
                 self.stop()
-            self.parse()
+            self.parse()  # parse the buffer
             time.sleep(0)
 
         self.__ser.close()

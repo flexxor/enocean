@@ -12,7 +12,7 @@ from enocean.protocol.constants import PACKET, RORG, PARSE_RESULT, DB0, DB2, DB3
 class Packet(object):
     '''
     Base class for Packet.
-    Mainly used for for packet generation and
+    Mainly used for packet generation and
     Packet.parse_msg(buf) for parsing message.
     parse_msg() returns subclass, if one is defined for the data type.
     '''
@@ -48,8 +48,10 @@ class Packet(object):
         self.parse()
 
     def __str__(self):
-        return '0x%02X %s %s %s' % (
+        return 'Packet type: %s (Hex: 0x%02X) | Data: %s (Hex: %s) | Optional: %s | Parsed: %s' % (
+            PACKET(self.packet_type),
             self.packet_type,
+            self.data,
             [hex(o) for o in self.data],
             [hex(o) for o in self.optional],
             self.parsed)
@@ -278,12 +280,14 @@ class Packet(object):
         return list(provides)
 
     def set_eep(self, data):
-        ''' Update packet data based on EEP. Input data is a dictionary with keys corresponding to the EEP. '''
+        """ Update packet data based on EEP. Input data is a dictionary with keys corresponding to the EEP. """
         self._bit_data, self._bit_status = self.eep.set_values(self._profile, self._bit_data, self._bit_status, data)
 
     def build(self):
-        ''' Build Packet for sending to EnOcean controller '''
+        """ Build Packet for sending to EnOcean controller """
         data_length = len(self.data)
+        # first: the sync byte
+        # second: data length is 2 bytes long, there right shift information by 8 bits
         ords = [0x55, (data_length >> 8) & 0xFF, data_length & 0xFF, len(self.optional), int(self.packet_type)]
         ords.append(crc8.calc(ords[1:5]))
         ords.extend(self.data)
@@ -301,7 +305,7 @@ class RadioPacket(Packet):
 
     def __str__(self):
         packet_str = super(RadioPacket, self).__str__()
-        return '%s->%s (%d dBm): %s' % (self.sender_hex, self.destination_hex, self.dBm, packet_str)
+        return 'Sender Hex: %s -> Destination Hex: %s (%d dBm): PacketStr: %s' % (self.sender_hex, self.destination_hex, self.dBm, packet_str)
 
     @staticmethod
     def create(rorg, rorg_func, rorg_type, direction=None, command=None,
@@ -338,9 +342,10 @@ class RadioPacket(Packet):
         if self.rorg == RORG.BS1:
             self.learn = not self._bit_data[DB0.BIT_3]
         if self.rorg == RORG.BS4:
-            self.learn = not self._bit_data[DB0.BIT_3]
+            self.learn = not self._bit_data[DB0.BIT_3]   # LRN Bit: 0=Teach-in telegram, 1=Data telegram
             if self.learn:
-                self.contains_eep = self._bit_data[DB0.BIT_7]
+                self.contains_eep = self._bit_data[DB0.BIT_7]  # LRN Type: 0=telegram without EEP and Manufacturer ID
+                # 1=telegram with EEP number and Manufacturer ID
                 if self.contains_eep:
                     # Get rorg_func and rorg_type from an unidirectional learn packet
                     self.rorg_func = enocean.utils.from_bitarray(self._bit_data[DB3.BIT_7:DB3.BIT_1])

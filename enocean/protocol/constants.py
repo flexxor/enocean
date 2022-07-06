@@ -47,10 +47,10 @@ class EVENT_CODE(IntEnum):
 # EnOcean_Equipment_Profiles_EEP_V2.61_public.pdf / 8
 class RORG(IntEnum):
     UNDEFINED = 0x00
-    RPS = 0xF6
-    BS1 = 0xD5
-    BS4 = 0xA5
-    VLD = 0xD2
+    RPS = 0xF6                      # Dec.: 246
+    BS1 = 0xD5                      # Dec.: 213
+    BS4 = 0xA5                      # Dec.: 165
+    VLD = 0xD2                      # Dec.: 210
     MSC = 0xD1
     ADT = 0xA6
     SM_LRN_REQ = 0xC6
@@ -59,7 +59,7 @@ class RORG(IntEnum):
     SYS_EX = 0xC5
     SEC = 0x30
     SEC_ENCAPS = 0x31
-    UTE = 0xD4
+    UTE = 0xD4                      # Dec.: 212
 
 
 # Results for message parsing

@@ -28,7 +28,6 @@ def set_position(destination, percentage):
     )
 
 
-
 communicator = SerialCommunicator()
 communicator.start()
 print('The Base ID of your module is %s.' % enocean.utils.to_hex_string(communicator.base_id))

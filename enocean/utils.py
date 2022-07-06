@@ -28,6 +28,8 @@ def from_bitarray(data):
 
 
 def to_hex_string(data):
+    if data is None:
+        return 'NONE'
     ''' Convert list of integers to a hex string, separated by ":" '''
     if isinstance(data, int):
         return '%02X' % data

@@ -30,7 +30,7 @@ To prevent running the app as root, change the access permissions:
 'sudo chmod 777 /dev/ttyUSB0'
 """
 communicator = SerialCommunicator(port=u'/dev/ttyUSB0', callback=None)
-packet = Packet(PACKET.COMMON_COMMAND, [0x03])
+packet = Packet(PACKET.COMMON_COMMAND, [0x03]) # CO_RD_VERSION
 
 communicator.daemon = True
 communicator.start()
