@@ -51,7 +51,7 @@ while communicator.is_alive():
         # Loop to empty the queue...
         packet = communicator.receive.get(block=True, timeout=1)
         if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.VLD:
-            packet.select_eep(0x05, 0x00)  # check this
+            packet.select_eep(0x01, 0x0e)  # check this
             packet.parse_eep()
             for k in packet.parsed:
                 print('%s: %s' % (k, packet.parsed[k]))
@@ -68,7 +68,7 @@ while communicator.is_alive():
                 print('%s: %s' % (k, packet.parsed[k]))
         if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.RPS:
             # for k in packet.parse_eep(0x02, 0x02):
-            for k in packet.parse_eep(0x10, 0x00):          # FUNC of window handle: 10, TYPE pof window handle: 00
+            for k in packet.parse_eep(0x10, 0x00):          # FUNC of window handle: 10, TYPE of window handle: 00
                 print('%s: %s' % (k, packet.parsed[k]))
     except queue.Empty:
         continue

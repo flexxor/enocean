@@ -10,12 +10,12 @@ from enocean.protocol.constants import PACKET, RORG, PARSE_RESULT, DB0, DB2, DB3
 
 
 class Packet(object):
-    '''
+    """
     Base class for Packet.
     Mainly used for packet generation and
     Packet.parse_msg(buf) for parsing message.
     parse_msg() returns subclass, if one is defined for the data type.
-    '''
+    """
     eep = EEP()
     logger = logging.getLogger('enocean.protocol.packet')
 
@@ -270,7 +270,9 @@ class Packet(object):
         return self._profile is not None
 
     def parse_eep(self, rorg_func=None, rorg_type=None, direction=None, command=None):
-        ''' Parse EEP based on FUNC and TYPE '''
+        """ Parse EEP based on FUNC and TYPE
+        returns a list of keys of TODO: description
+        """
         # set EEP profile, if demanded
         if rorg_func is not None and rorg_type is not None:
             self.select_eep(rorg_func, rorg_type, direction, command)
@@ -287,7 +289,7 @@ class Packet(object):
         """ Build Packet for sending to EnOcean controller """
         data_length = len(self.data)
         # first: the sync byte
-        # second: data length is 2 bytes long, there right shift information by 8 bits
+        # second: data length is 2 bytes long, therefore right shift information by 8 bits
         ords = [0x55, (data_length >> 8) & 0xFF, data_length & 0xFF, len(self.optional), int(self.packet_type)]
         ords.append(crc8.calc(ords[1:5]))
         ords.extend(self.data)
@@ -338,7 +340,7 @@ class RadioPacket(Packet):
 
         self.rorg = self.data[0]
 
-        # parse learn bit and FUNC/TYPE, if applicable
+        # parse learn bit and FUNC/TYPE, if a[]pplicable
         if self.rorg == RORG.BS1:
             self.learn = not self._bit_data[DB0.BIT_3]
         if self.rorg == RORG.BS4:
@@ -409,6 +411,15 @@ class UTETeachInPacket(RadioPacket):
         # - Always use bidirectional communication, set response code, set command identifier.
         # - Databytes 5 to 0 are copied from the original message
         # - Set sender id and status
+        if self.rorg is None:
+            print("rorg is None")
+        if response is None:
+            print("response is None")
+        if self.data is None:
+            print("data is None")
+        if sender_id is None:
+            print("sender_id is None")
+
         data = [self.rorg] + \
                [enocean.utils.from_bitarray([True, False] + response + [False, False, False, True])] + \
                self.data[2:8] + \

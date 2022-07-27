@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-'''
+"""
 Example to show automatic UTE Teach-in responses using
 http://www.g-media.fr/prise-gigogne-enocean.html
 
 Waits for UTE Teach-ins, sends the response automatically and prints the ID of new device.
-'''
+"""
 
 import sys
 import time
@@ -13,7 +13,7 @@ import traceback
 import enocean.utils
 from enocean.communicators import SerialCommunicator
 from enocean.protocol.packet import RadioPacket, UTETeachInPacket
-from enocean.protocol.constants import RORG
+from enocean.protocol.constants import RORG, PACKET
 
 try:
     import queue
@@ -35,10 +35,11 @@ print('The Base ID of your module is %s.' % enocean.utils.to_hex_string(communic
 
 # set_position([0x05, 0x0F, 0x0B, 0xEA], 100)
 # time.sleep(10)
-set_position([0x05, 0x0F, 0x0B, 0xEA], 50)
+#set_position([0x05, 0x0F, 0x0B, 0xEA], 50)
 
 
-print('Press and hold the teach-in button on the plug now, till it starts turning itself off and on (about 10 seconds or so...)')
+#print('Press and hold the teach-in button on the plug now, till it starts turning itself off and on (about 10 seconds or so...)')
+print("Press the button of the plug now until it flashes red")
 devices_learned = []
 
 # endless loop receiving radio packets
@@ -47,7 +48,11 @@ while communicator.is_alive():
         # Loop to empty the queue...
         packet = communicator.receive.get(block=True, timeout=1)
         if isinstance(packet, UTETeachInPacket):
-            print('New device learned! The ID is %s.' % (packet.sender_hex))
+            print('New device learned! The ID is %s.' % packet.sender_hex)
+            devices_learned.append(packet.sender)
+        elif isinstance(packet, RadioPacket) and packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.BS4:
+            # TODO: send response packet
+            print("New device learned! The ID is %s." % packet.sender_hex)
             devices_learned.append(packet.sender)
     except queue.Empty:
         continue

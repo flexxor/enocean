@@ -51,7 +51,13 @@ if communicator.is_alive():
     except queue.Empty:
         print('Queue empty')
 
-# print('The Base ID of your module is %s.' % enocean.utils.to_hex_string(communicator.base_id))
+print('The Base ID of your module is %s.' % enocean.utils.to_hex_string(communicator.base_id))
+baseid = communicator.base_id
+used_base_ids = [baseid]
+next_free_base_id = utils.get_next_free_base_id(baseid, used_base_ids)
+used_base_ids.append(next_free_base_id)
+n_next_free_base_id = utils.get_next_free_base_id(baseid, used_base_ids)
+used_base_ids.append(n_next_free_base_id)
 
 # if communicator.base_id is not None:
 
@@ -71,6 +77,7 @@ last_time = time.localtime()
 time_in_seconds = time.time()
 print("Time %s" % time.strftime("%H:%M", last_time))
 
+learned_devices = []
 
 # read the answer, check for communicator thread first
 while communicator.is_alive():
@@ -94,30 +101,58 @@ while communicator.is_alive():
             # optional data
         else:
             if packet.packet_type == PACKET.RADIO_ERP1 and packet.rorg == RORG.BS4:
+                # get the third bit of the fourth byte and check for "0".
                 if utils.get_bit(packet.data[4], 3) == 0:
                     # we have a teach-in packet
-                    teach_in_response_packet: RadioPacket = Packet.create(PACKET.RADIO_ERP1, rorg=RORG.BS4,
-                                                                          rorg_func=0x20,
-                                                                          rorg_type=0x01,
+                    # let's create a proper response
+                    rorg = packet.rorg
+                    print("rorg of requesting device: %s" % str(rorg))
+                    func = packet.rorg_func
+                    print("rorg_func of requesting device: %s" % str(func))
+                    rorg_type = packet.rorg_type
+                    print("rorg_type of requesting device: %s" % str(rorg_type))
+                    teach_in_response_packet: RadioPacket = Packet.create(PACKET.RADIO_ERP1,
+                                                                          #rorg=RORG.BS4,        # respond with BS4 teach-in-response
+                                                                          rorg=rorg,
+                                                                          #rorg_func=0x20,       # value for thermostat # TODO: read from incoming packet
+                                                                          rorg_func=func,
+                                                                          #rorg_type=0x01,       # value for thermostat
+                                                                          rorg_type=rorg_type,
                                                                           sender=communicator.base_id,
                                                                           learn=True)
+
+                    # copy over the packet data as it will be sent back with slight variation
                     teach_in_response_packet.data[1:5] = packet.data[1:5]
+
+                    # set the bits of the byte for the success case (F0 = 11110000)
                     teach_in_response_packet.data[4] = 0xF0
+
                     # teach_in_response_packet.destination = packet.
                     # set destination to former sender
                     destination = packet.data[-5:-1]
                     teach_in_response_packet.destination = destination
+
                     # set sender to base id (no offset)
+                    # TODO: test base id + 1
+                    base_id = communicator.base_id
+                    print("base id: {}" % base_id)
                     teach_in_response_packet.sender = communicator.base_id
 
+                    # build the optional data
+                    # subTelegram Number + destination + dBm (send case: FF) + security (0)
                     optional = [3] + destination + [0xFF, 0]
                     teach_in_response_packet.optional = optional
                     teach_in_response_packet.parse()
                     print("response created")
-                    successful_sent = communicator.send(teach_in_response_packet)
-                    if successful_sent:
-                        print("Sent teach-in response") # taught in successfully thermostat at 2022-05-08 19:37
 
+                    # send the packet via the communicator
+                    successful_sent = communicator.send(teach_in_response_packet)
+
+                    if successful_sent:
+                        # the package was put to the transmit queue
+                        print("Sent teach-in response")  # taught in successfully thermostat at 2022-05-08 19:37
+
+                # no BS4-teach-in-packet has arrived
                 if packet.data[-5:-1] == [1, 1, 222, 176]:
                     print("data from thermo arrived: %s" % utils.to_hex_string(packet.data))
                     data_response: RadioPacket = Packet.create(PACKET.RADIO_ERP1, rorg=RORG.BS4, rorg_func=0x20,
@@ -130,7 +165,7 @@ while communicator.is_alive():
                     data_response.data[2] = 0xB0            # temperature actual from RCU
                     # data_response.data[3] = 0xE1
                     data_response.data[3] = 0x21            # set point normal
-                    #data_response.data[3] = 0x23            # set point inverse
+                    # data_response.data[3] = 0x23            # set point inverse
                     # data_response.data[4] = 0x08
                     data_response.data[4] = 0x08
                     destination = packet.data[-5:-1]
@@ -155,7 +190,7 @@ while communicator.is_alive():
     # print('Sending example package.')
     # communicator.send(assemble_radio_packet(communicator.base_id))
 
-pass
+
 # endless loop receiving radio packets
 # while communicator.is_alive():
 #     try:

@@ -28,3 +28,12 @@ def test_from_hex_string():
 
     assert enocean.utils.from_hex_string('00:0F:10:16') == [0, 15, 16, 22]
     assert enocean.utils.from_hex_string('00:0F:10:16') == [0x00, 0x0F, 0x10, 0x16]
+
+
+#def test_combine_hex():
+#    integers = [1, 2]
+#    output = enocean.utils.combine_hex(integers)
+#    print(hex(output))
+
+#if __name__ == '__main__':
+#    test_combine_hex()
