@@ -334,7 +334,8 @@ class RadioPacket(Packet):
     def parse(self):
         self.destination = self.optional[1:5]
         self.dBm = -self.optional[5]
-        self.sender = self.data[-5:-1]
+        self.sender = self.data[-5:-1]  # the Sender ID part starts 5 bytes from the end, is 4 bytes long and
+                                        # is only followed by 1 byte, which contains the status
         # Default to learn == True, as some devices don't have a learn button
         self.learn = True
 
